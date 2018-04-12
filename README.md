@@ -4,7 +4,9 @@ It is constitued of a python module, snr_module.py,
 
 ![GW151226](/images/gw151226.png "GW151226")
 
-![Terminal_output](/images/terminal.png "Terminal_output")
+<p align="center">
+  <img width="460" height="300" src="/images/terminal.png">
+</p>
 
 Several examples have been provided to show the module in action. Use template.py for new test. See example directory.
 The parameters that can be changed are 
