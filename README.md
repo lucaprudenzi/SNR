@@ -1,7 +1,11 @@
 # SNR
-snr_module.py python module computes the amplitude, the frequency and the signal-to-noise ratio for Ligo gravitational wave sources during inspiral phase.
-![alt text](https://github.com/lucaprudenzi/SNR/tree/master/images/gw151226.png "GW151226")
-Three examples are provided using GW150914, GW151226 and GW170817 parameters to show the module in action. It is possibile to modify masses, luminosity distance, redshift and the angles respect to the interferometer reference frame
-
-
-
+This project has the aim of compute the amplitude, the frequency and the signal-to-noise ratio for Ligo gravitational wave sources during inspiral phase.
+It is constitued of a python module, snr_module.py, 
+![GW151226](/images/gw151226.png)
+Several examples have been provided to show the module in action. Use template.py for new test. See example directory.
+The parameters that can be changed are 
+- masses of the binary
+- luminosity distance
+- redshift 
+- angle between line of sight and angular moment of the binary
+- angles that describe the position in the sky of the binary
