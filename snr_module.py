@@ -14,26 +14,15 @@ def SolarMass(mass):
     M_sun = 1.989e33 # Sun mass [g]
     return  mass*M_sun
 
-def ChirpMass(mass1, mass2):
+def ChirpMass(mass1, mass2, z):
     mass1 = SolarMass(mass1)
     mass2 = SolarMass(mass2)
-    return (mass1*mass2)**(3./5.)/(mass1+mass2)**(1./5.)
-
-# symmetric mass ratio
-def SMR(mass1, mass2):
-    mass1 = SolarMass(mass1)
-    mass2 = SolarMass(mass2)
-    return (mass1*mass2)/(mass1+mass2)**2
+    return (mass1*mass2)**(3./5.)/(mass1+mass2)**(1./5.)*(1+z)
 
 ## Distances functions
 # distance in Mpc
 def Mpc(distance):
     return distance*3.1e24
-
-# proper distance
-def dp(dl, z):
-    dl = Mpc(dl)
-    return dl/(1.+z)
 
 # tau See Note 3 Chap 4 Maggiore
 def Tau(Mc):
@@ -63,25 +52,25 @@ def PHI(Mc, t):
     return -2*(5*G*Mc/c**3)**(-5./8.)*t**(5./8.)+Phi0
 
 def Hplus(mass1, mass2, dl, z, iota):
-    r = dp(dl, z) # proper distance
-    Mc = ChirpMass(mass1, mass2)
+    Mc = ChirpMass(mass1, mass2, z)
     tau = Tau(Mc)
     Phi = PHI(Mc, tau)
     freq = Freq(Mc, tau)
+    dl = Mpc(dl)
 
-    hplus = 4./r*(G*Mc/c**2)**(5./3.)*(m.pi*freq/c)**(2./3.)* \
+    hplus = 4./dl*(G*Mc/c**2)**(5./3.)*(m.pi*freq/c)**(2./3.)* \
             (1+np.cos(iota)**2)/2.*np.cos(Phi)
     
     return hplus
 
 def Hcross(mass1, mass2, dl, z, iota):
-    r = dp(dl, z) # proper distance
-    Mc = ChirpMass(mass1, mass2)
+    Mc = ChirpMass(mass1, mass2, z)
     tau = Tau(Mc)
     Phi = PHI(Mc, tau)
     freq = Freq(Mc, tau)
+    dl = Mpc(dl)
 
-    hcross = 4./r*(G*Mc/c**2)**(5./3.)*(m.pi*freq/c)**(2./3.)* \
+    hcross = 4./dl*(G*Mc/c**2)**(5./3.)*(m.pi*freq/c)**(2./3.)* \
             np.cos(iota)*np.sin(Phi)
     
     return hcross
@@ -106,31 +95,31 @@ def PSIcross(Mc, freq):
     return  Psiplus+np.pi/2.
 
 def Hplusft(mass1, mass2, dl, z, iota):
-    Mc = ChirpMass(mass1, mass2)
-    r = dp(dl, z)
+    Mc = ChirpMass(mass1, mass2, z)
     tau = Tau(Mc)
     freq = Freq(Mc, tau)
+    dl = Mpc(dl)
     #
     freq = np.linspace(freqin, freq[-1], N)
     #
     Psiplus = PSIplus(Mc, freq)
     A = 1./m.pi**(2./3.)*(5./24.)**(1./2.)
-    hplusft = A*np.exp(1j*Psiplus)*c/r*(G*Mc/c**3)*\
+    hplusft = A*np.exp(1j*Psiplus)*c/dl*(G*Mc/c**3)*\
             freq**(-7./6.)*(1+np.cos(iota)**2)/2.
     
     return hplusft
 
 def Hcrossft(mass1, mass2, dl, z, iota):
-    Mc = ChirpMass(mass1, mass2)
-    r = dp(dl, z)
+    Mc = ChirpMass(mass1, mass2, z)
     tau = Tau(Mc)
     freq = Freq(Mc, tau)
+    dl = Mpc(dl)
     #
     freq = np.linspace(freqin, freq[-1],N)
     #
     Psicross = PSIcross(Mc, freq)
     A = 1./m.pi**(2./3)*(5./24.)**(1./2.)
-    hcrossft = A*np.exp(1j*Psicross)*c/r*(G*Mc/c**3)*\
+    hcrossft = A*np.exp(1j*Psicross)*c/dl*(G*Mc/c**3)*\
             freq**(-7./6.)*np.cos(iota)
 
     return hcrossft
@@ -144,8 +133,8 @@ def Hft(mass1, mass2, dl, z, iota, theta, phi, psi):
     return fplus*hplusft+fcross*hcrossft
 
 # Amplitude spectral density (hard-coded model from Ligo tutorial)
-def ASD(mass1, mass2):
-    Mc = ChirpMass(mass1, mass2)
+def ASD(mass1, mass2, z):
+    Mc = ChirpMass(mass1, mass2, z)
     tau = Tau(Mc)
     # same interval of the Fourier transform of h 
     freq = Freq(Mc, tau)
@@ -161,15 +150,17 @@ def ASD(mass1, mass2):
     return freq, asd
 
 def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
-    freq, asd = ASD(mass1, mass2)
+    freq, asd = ASD(mass1, mass2, z)
     hft = Hft(mass1, mass2, dl, z, iota, theta, phi, psi)
 
     # check that the signal is above the sensibility curve
     factor1 = 2*(np.abs(hft))*np.sqrt(freq)
     factor2 = asd
     mask = factor1 > factor2
+    
+    #
     factor1 = 2*(np.abs(hft)) # this is the function to evaluate 
-                              # in the integral
+    #                         # in the integral
     # reduce the evaluation interval only to inband part
     factor1 = factor1[mask]
     factor2 = factor2[mask]
@@ -178,6 +169,7 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
     # integral computation
     fraction = factor1**2/factor2**2
     integral = trapezoidal(fraction, freq)
+    print(integral)
     snr = np.sqrt(integral)
 
     print (tabulate([['Mass1 (Solar masses)',mass1],\
@@ -196,10 +188,11 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
 # Compute the integral
 def trapezoidal(func, freq):
     n = len(func)
-    print(n)
     if n==0:
         return 0
-
+    #
+    #freq = np.log(freq)
+    #
     s=func[0]*(freq[1]-freq[0])/2.
     s+=func[-1]*(freq[n-1]*freq[n-2])/2.
     for i in range(1,n-1):
@@ -210,13 +203,13 @@ def trapezoidal(func, freq):
 ## Plot functions
 def HPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
     h = H(mass1, mass2, dl, z, iota, theta, phi, psi)
-    Mc = ChirpMass(mass1, mass2)
+    Mc = ChirpMass(mass1, mass2, z)
     time = Tau(Mc)
     
     return time, h
 
-def FPlot(mass1, mass2):
-    Mc = ChirpMass(mass1, mass2)
+def FPlot(mass1, mass2, z):
+    Mc = ChirpMass(mass1, mass2, z)
     time = Tau(Mc)
     freq = Freq(Mc, time)
 
@@ -224,7 +217,7 @@ def FPlot(mass1, mass2):
 
 def HftPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
     hft = Hft(mass1, mass2, dl, z, iota, theta, phi, psi)
-    Mc = ChirpMass(mass1, mass2)
+    Mc = ChirpMass(mass1, mass2, z)
     time = Tau(Mc)
     freq = Freq(Mc, time)
     #

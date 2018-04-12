@@ -18,7 +18,7 @@ psi = 0 # orientation of the axes of the binary respect to the axes of the
         # interferometers
 
 time, h = snr.HPlot(mass1,mass2,dl,z,iota,theta,phi,psi)
-time, freq = snr.FPlot(mass1, mass2)
+time, freq = snr.FPlot(mass1, mass2, z)
 
 freq1, hft  = snr.HftPlot(mass1,mass2,dl,z,iota,theta,phi,psi)
 freq2, asd = snr.ASDPlot()
