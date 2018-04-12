@@ -6,7 +6,7 @@ from tabulate import tabulate
 c = 2.99e10
 freqin = 30 # Ligo inband frequency
 G = 6.67e-8
-N = 4096
+N = 15000
 tbefore = 0.01 # time before divergence of linearized quantities
 
 ## Masses functions
@@ -57,7 +57,7 @@ def Fcross(theta, phi, psi):
     return 0.5*(1+m.cos(theta)**2)*m.cos(2*phi)* \
             m.sin(2*psi)+m.cos(theta)*m.sin(2*phi)*m.cos(2*psi)
 
-## GW Amplitude
+## GW Amplitude (Maggiore)
 def PHI(Mc, t):
     Phi0 = 0 # Phase at coalescence 
     return -2*(5*G*Mc/c**3)**(-5./8.)*t**(5./8.)+Phi0
@@ -168,6 +168,9 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
     factor1 = 2*(np.abs(hft))*np.sqrt(freq)
     factor2 = asd
     mask = factor1 > factor2
+    factor1 = 2*(np.abs(hft)) # this is the function to evaluate 
+                              # in the integral
+    # reduce the evaluation interval only to inband part
     factor1 = factor1[mask]
     factor2 = factor2[mask]
     freq = freq[mask]
@@ -196,12 +199,11 @@ def trapezoidal(func, freq):
     print(n)
     if n==0:
         return 0
-    freqlog = np.log(freq)
 
-    s=func[0]*(freqlog[1]-freqlog[0])/2.
-    s+=func[-1]*(freqlog[n-1]*freqlog[n-2])/2.
+    s=func[0]*(freq[1]-freq[0])/2.
+    s+=func[-1]*(freq[n-1]*freq[n-2])/2.
     for i in range(1,n-1):
-        s+=func[i]*(freqlog[i+1]-freqlog[i])
+        s+=func[i]*(freq[i+1]-freq[i])
     
     return s
 
