@@ -34,7 +34,7 @@ plt.subplots_adjust(hspace=.0)
 # First left hand plot
 ax0 = plt.subplot(gs[0,:2])
 line0, = ax0.plot(-time, h, color='r', label='h')
-plt.ylabel('h')
+plt.ylabel('Strain h')
 plt.grid(True)
 # Second left hand plot
 ax1 = plt.subplot(gs[1,:2], sharex=ax0)
@@ -50,13 +50,13 @@ yticks = ax1.yaxis.get_major_ticks()
 yticks[-1].label1.set_visible(False)
 
 # Right hand plot
-plt.subplot(gs[0:,2:])
+ax2 = plt.subplot(gs[0:,2:])
 # sqrt(f) factor needed because of the loglog plot
 plt.loglog(freq1, 2*np.abs(hft)*np.sqrt(freq1), \
-           label='2|hft|sqrt(f)', color='c')
-plt.loglog(freq2, asd, label='sqrt(S_noise)', color='m')
+           label=r'$2\|\mathrm{hft}\|\sqrt{\mathrm{freq}}$', color='c')
+plt.loglog(freq2, asd, label='ASD', color='m')
 plt.xlabel('Frequency [Hz]')
-plt.ylabel('2|hft|sqrt(f) and sqrt(S_noise) [1/sqrt(Hz)]')
+ax2.set_ylabel(r'$2\|hft\|\sqrt{\mathrm{freq}}\mathrm{,}\sqrt{S_{noise}}[\mathrm{strain}/\sqrt{\mathrm{Hz}}]$')
 plt.legend()
 
 plt.show()
