@@ -4,7 +4,7 @@ from tabulate import tabulate
 
 # Constants
 c = 2.99e10
-freqin = 20 # Ligo inband frequency
+freqin = 30 # Ligo inband frequency
 G = 6.67e-8
 N = 4096
 tbefore = 0.01 # time before divergence of linearized quantities
@@ -46,7 +46,7 @@ def Tau(Mc):
 def Freq(Mc, t):
     return 1./m.pi*(5./256.*1./t)**(3./8.)*(G*Mc/c**3)**(-5./8.)
 
-## Detector pattern functions
+## Detector pattern functions (Schutz11)
 # F+
 def Fplus(theta, phi, psi):
     return 0.5*(1+m.cos(theta)**2)*m.cos(2*phi)* \
@@ -110,9 +110,11 @@ def Hplusft(mass1, mass2, dl, z, iota):
     r = dp(dl, z)
     tau = Tau(Mc)
     freq = Freq(Mc, tau)
+    #
+    freq = np.linspace(freqin, freq[-1], N)
+    #
     Psiplus = PSIplus(Mc, freq)
     A = 1./m.pi**(2./3.)*(5./24.)**(1./2.)
-    
     hplusft = A*np.exp(1j*Psiplus)*c/r*(G*Mc/c**3)*\
             freq**(-7./6.)*(1+np.cos(iota)**2)/2.
     
@@ -123,12 +125,14 @@ def Hcrossft(mass1, mass2, dl, z, iota):
     r = dp(dl, z)
     tau = Tau(Mc)
     freq = Freq(Mc, tau)
+    #
+    freq = np.linspace(freqin, freq[-1],N)
+    #
     Psicross = PSIcross(Mc, freq)
     A = 1./m.pi**(2./3)*(5./24.)**(1./2.)
-    
     hcrossft = A*np.exp(1j*Psicross)*c/r*(G*Mc/c**3)*\
             freq**(-7./6.)*np.cos(iota)
-    
+
     return hcrossft
 
 def Hft(mass1, mass2, dl, z, iota, theta, phi, psi):
@@ -136,51 +140,43 @@ def Hft(mass1, mass2, dl, z, iota, theta, phi, psi):
     hcrossft = Hcrossft(mass1, mass2, dl, z, iota)
     fplus = Fplus(theta, phi, psi)
     fcross = Fcross(theta, phi, psi)
-    
+
     return fplus*hplusft+fcross*hcrossft
 
 # Amplitude spectral density (hard-coded model from Ligo tutorial)
-def ASD(freqfinal):
-    # frequency interval
-    freq = np.linspace(freqin,freqfinal,N)
+def ASD(mass1, mass2):
+    Mc = ChirpMass(mass1, mass2)
+    tau = Tau(Mc)
+    # same interval of the Fourier transform of h 
+    freq = Freq(Mc, tau)
+    #
+    freq = np.linspace(freqin, freq[-1],N)
+    #
     # power spectral density
     psd = (1.e-22*(18./(0.1+freq))**2)**2+0.7e-23**2+ \
             ((freq/2000.)*4.e-23)**2
     # ampliude spectral density
     asd = np.sqrt(psd)
+    
     return freq, asd
 
 def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
-    Mc = ChirpMass(mass1, mass2)
-    time = Tau(Mc)
-    freq = Freq(Mc, time)
-    freqfinal = freq[-1] # last element used integral computation 
-    freq, asd = ASD(freqfinal)
-    
+    freq, asd = ASD(mass1, mass2)
     hft = Hft(mass1, mass2, dl, z, iota, theta, phi, psi)
-    
+
     # check that the signal is above the sensibility curve
-    factor1 = 2*(np.abs(hft))
+    factor1 = 2*(np.abs(hft))*np.sqrt(freq)
     factor2 = asd
-    newfactor1 = []
-    newfactor2 = []
-    newfreq = []
-    
-    for i in range(0,N):
-        if factor1[i]>factor2[i]:
-            newfactor1.append(factor1[i])
-            newfactor2.append(factor2[i])
-            newfreq.append(freq[i])
-    newfactor1 = np.array(newfactor1)
-    newfactor2 = np.array(newfactor2)
-    newfreq = np.array(newfreq)
+    mask = factor1 > factor2
+    factor1 = factor1[mask]
+    factor2 = factor2[mask]
+    freq = freq[mask]
 
     # integral computation
-    fraction = newfactor1**2/newfactor2**2
-    integral = trapezoidal(fraction, newfreq)
+    fraction = factor1**2/factor2**2
+    integral = trapezoidal(fraction, freq)
     snr = np.sqrt(integral)
-    
-    # print result
+
     print (tabulate([['Mass1 (Solar masses)',mass1],\
                      ['Mass2 (Solar masses)',mass2],\
                      ['d_l (Mpc)',dl],['z',z],\
@@ -188,22 +184,26 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
                      ['theta (from z-axis)', theta],\
                      ['phi (from x-arm)',phi],\
                      ['psi (binary axes orientation)',psi],\
+                     ['frequency in band', freqin],\
                      ['SNR (inspiral)',snr]], \
                     headers=['Quantities','Values']))
-    
+
     return snr
 
 # Compute the integral
 def trapezoidal(func, freq):
     n = len(func)
-    dx = (freq[-1]-freq[0])/(n+1)
-    s=0.0
+    print(n)
+    if n==0:
+        return 0
+    freqlog = np.log(freq)
 
-    s=func[0]+func[-1]
+    s=func[0]*(freqlog[1]-freqlog[0])/2.
+    s+=func[-1]*(freqlog[n-1]*freqlog[n-2])/2.
     for i in range(1,n-1):
-        s+=2*func[i]
+        s+=func[i]*(freqlog[i+1]-freqlog[i])
     
-    return s*dx/2.
+    return s
 
 ## Plot functions
 def HPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
@@ -225,12 +225,21 @@ def HftPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
     Mc = ChirpMass(mass1, mass2)
     time = Tau(Mc)
     freq = Freq(Mc, time)
-    
+    #
+    freq = np.linspace(freqin, freq[-1],N)
+    #
+
     return freq, hft
 
 def ASDPlot():
     freqfinal = 1000
-    freq, asd = ASD(freqfinal)
-    
+    # frequency interval
+    freq = np.linspace(freqin,freqfinal,N)
+    # power spectral density
+    psd = (1.e-22*(18./(0.1+freq))**2)**2+0.7e-23**2+ \
+            ((freq/2000.)*4.e-23)**2
+    # ampliude spectral density
+    asd = np.sqrt(psd)
     return freq, asd
+
 
