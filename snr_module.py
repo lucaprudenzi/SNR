@@ -6,7 +6,7 @@ from tabulate import tabulate
 c = 2.99e10
 freqin = 30 # Ligo inband frequency
 G = 6.67e-8
-N = 15000
+N = 150000 # points in time array
 tbefore = 0.01 # time before divergence of linearized quantities
 
 ## Masses functions
@@ -100,7 +100,7 @@ def Hplusft(mass1, mass2, dl, z, iota):
     freq = Freq(Mc, tau)
     dl = Mpc(dl)
     #
-    freq = np.linspace(freqin, freq[-1], N)
+    # freq = np.linspace(freqin, freq[-1], N)
     #
     Psiplus = PSIplus(Mc, freq)
     A = 1./m.pi**(2./3.)*(5./24.)**(1./2.)
@@ -115,7 +115,7 @@ def Hcrossft(mass1, mass2, dl, z, iota):
     freq = Freq(Mc, tau)
     dl = Mpc(dl)
     #
-    freq = np.linspace(freqin, freq[-1],N)
+    # freq = np.linspace(freqin, freq[-1],N)
     #
     Psicross = PSIcross(Mc, freq)
     A = 1./m.pi**(2./3)*(5./24.)**(1./2.)
@@ -139,7 +139,7 @@ def ASD(mass1, mass2, z):
     # same interval of the Fourier transform of h 
     freq = Freq(Mc, tau)
     #
-    freq = np.linspace(freqin, freq[-1],N)
+    # freq = np.linspace(freqin, freq[-1],N)
     #
     # power spectral density
     psd = (1.e-22*(18./(0.1+freq))**2)**2+0.7e-23**2+ \
@@ -169,7 +169,6 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
     # integral computation
     fraction = factor1**2/factor2**2
     integral = trapezoidal(fraction, freq)
-    print(integral)
     snr = np.sqrt(integral)
 
     print (tabulate([['Mass1 (Solar masses)',mass1],\
@@ -190,9 +189,10 @@ def trapezoidal(func, freq):
     n = len(func)
     if n==0:
         return 0
+    # 
+    # freq = np.log(freq)
     #
-    #freq = np.log(freq)
-    #
+    
     s=func[0]*(freq[1]-freq[0])/2.
     s+=func[-1]*(freq[n-1]*freq[n-2])/2.
     for i in range(1,n-1):
@@ -221,7 +221,7 @@ def HftPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
     time = Tau(Mc)
     freq = Freq(Mc, time)
     #
-    freq = np.linspace(freqin, freq[-1],N)
+    # freq = np.linspace(freqin, freq[-1],N)
     #
 
     return freq, hft
