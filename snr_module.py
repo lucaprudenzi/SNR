@@ -157,7 +157,7 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
     factor1 = 2*(np.abs(hft))*np.sqrt(freq)
     factor2 = asd
     mask = factor1 > factor2
-    
+   
     #
     factor1 = 2*(np.abs(hft)) # this is the function to evaluate 
     #                         # in the integral
@@ -165,10 +165,12 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
     factor1 = factor1[mask]
     factor2 = factor2[mask]
     freq = freq[mask]
-
-    # integral computation
-    fraction = factor1**2/factor2**2
-    integral = trapezoidal(fraction, freq)
+    fraction = factor1**2/factor2**2 
+    
+    # Integral computation (two equivalent methods)
+    integral = np.trapz(freq*fraction, np.log(freq))
+    #integral = np.trapz(fraction, freq)
+    
     snr = np.sqrt(integral)
 
     print (tabulate([['Mass1 (Solar masses)',mass1],\
@@ -183,22 +185,6 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
                     headers=['Quantities','Values']))
 
     return snr
-
-# Compute the integral
-def trapezoidal(func, freq):
-    n = len(func)
-    if n==0:
-        return 0
-    # 
-    # freq = np.log(freq)
-    #
-    
-    s=func[0]*(freq[1]-freq[0])/2.
-    s+=func[-1]*(freq[n-1]*freq[n-2])/2.
-    for i in range(1,n-1):
-        s+=func[i]*(freq[i+1]-freq[i])
-    
-    return s
 
 ## Plot functions
 def HPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
