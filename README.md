@@ -2,7 +2,7 @@
 This project has the aim of compute the amplitude, the frequency and the signal-to-noise ratio for Ligo gravitational wave sources during inspiral phase.
 It is constitued of a python module, snr_module.py, 
 
-![GW151226](/images/gw151226.png "GW151226")
+![GW151226](/images/gw150914.png "GW150914")
 
 <p align="center">
   <img width="460" height="300" src="/images/terminal.png">
