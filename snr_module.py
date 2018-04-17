@@ -25,14 +25,20 @@ def Mpc(distance):
     return distance*3.1e24
 
 # tau See Note 3 Chap 4 Maggiore
-def Tau(Mc):
+def Tau(Mc, mass1=14, mass2=7):
+    mass1 = SolarMass(mass1)
+    mass2 = SolarMass(mass2)
+    #tbefore = 10*5./16*G*(mass1+mass2)**2/(c**3*(mass1*mass2)/(mass1+mass2))
+    #print(tbefore)
     tcoal = (1./np.pi)**(8/3)*(5./256.)*(G*Mc/c**3)**(-5./3)* \
             (1/freqin)**(8./3)
     t = np.linspace(0, tcoal-tbefore, N)
     tau = tcoal-t
     return tau
 
-def Freq(Mc, t):
+def Freq(Mc, t, mass1 = SolarMass(15), mass2 = SolarMass(7)):
+    #fisco = 2*1./(6*m.sqrt(6)*2*m.pi)*(c**3/G/(mass1+mass2))
+    #print (fisco)
     return 1./m.pi*(5./256.*1./t)**(3./8.)*(G*Mc/c**3)**(-5./8.)
 
 ## Detector pattern functions (Schutz11)
@@ -100,7 +106,7 @@ def Hplusft(mass1, mass2, dl, z, iota):
     freq = Freq(Mc, tau)
     dl = Mpc(dl)
     #
-    freq = np.geomspace(freqin, freq[-1], N)
+    freq = np.logspace(np.log10(freqin), np.log10(freq[-1]), N)
     #
     Psiplus = PSIplus(Mc, freq)
     A = 1./m.pi**(2./3.)*(5./24.)**(1./2.)
@@ -115,7 +121,7 @@ def Hcrossft(mass1, mass2, dl, z, iota):
     freq = Freq(Mc, tau)
     dl = Mpc(dl)
     #
-    freq = np.geomspace(freqin, freq[-1],N)
+    freq = np.logspace(np.log10(freqin), np.log10(freq[-1]),N)
     #
     Psicross = PSIcross(Mc, freq)
     A = 1./m.pi**(2./3)*(5./24.)**(1./2.)
@@ -139,7 +145,7 @@ def ASD(mass1, mass2, z):
     # same interval of the Fourier transform of h 
     freq = Freq(Mc, tau)
     #
-    freq = np.geomspace(freqin, freq[-1],N)
+    freq = np.logspace(np.log10(freqin), np.log10(freq[-1]),N)
     #
     # power spectral density
     psd = (1.e-22*(18./(0.1+freq))**2)**2+0.7e-23**2+ \
@@ -207,7 +213,7 @@ def HftPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
     time = Tau(Mc)
     freq = Freq(Mc, time)
     #
-    freq = np.geomspace(freqin, freq[-1],N)
+    freq = np.logspace(np.log10(freqin), np.log10(freq[-1]),N)
     #
 
     return freq, hft
