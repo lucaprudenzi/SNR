@@ -1,17 +1,16 @@
 import math as m
 import numpy as np
-from tabulate import tabulate
 
 # Constants
-c = 2.99e10
-freqin = 30 # Ligo inband frequency
+c = 3e10
+M_sun = 1.989e33 # Sun mass [g]
+freqin = 1 # Ligo inband frequency
 G = 6.67e-8
 N = 150000 # points in time array
-tbefore = 0.01 # time before divergence of linearized quantities
+# choose between H1, L1 and V1
+detector = 'L1'
 
-## Masses functions
 def SolarMass(mass):
-    M_sun = 1.989e33 # Sun mass [g]
     return  mass*M_sun
 
 def ChirpMass(mass1, mass2, z):
@@ -25,30 +24,64 @@ def Mpc(distance):
     return distance*3.1e24
 
 # tau See Note 3 Chap 4 Maggiore
-def Tau(Mc, mass1=14, mass2=7):
-    mass1 = SolarMass(mass1)
-    mass2 = SolarMass(mass2)
+def Tau(Mc, mass1, mass2, z):
+    mass1 = SolarMass(mass1)*(1+z)
+    mass2 = SolarMass(mass2)*(1+z)
+    # at 10Rs 
     #tbefore = 10*5./16*G*(mass1+mass2)**2/(c**3*(mass1*mass2)/(mass1+mass2))
     #print(tbefore)
+    fisco = 2*1./(6*m.sqrt(6)*2*m.pi)*(c**3/(G*(mass1+mass2)))
+    #print(fisco)
+    #print(1./fisco)
+
     tcoal = (1./np.pi)**(8/3)*(5./256.)*(G*Mc/c**3)**(-5./3)* \
-            (1/freqin)**(8./3)
-    t = np.linspace(0, tcoal-tbefore, N)
+            (1./freqin)**(8./3)
+    tcoalfin = (1./np.pi)**(8/3)*(5./256.)*(G*Mc/c**3)**(-5./3)* \
+            (1./fisco)**(8./3)
+
+    #print(tcoalfin)
+    t = np.linspace(0, tcoal-tcoalfin, N)
     tau = tcoal-t
     return tau
 
 def Freq(Mc, t, mass1 = SolarMass(15), mass2 = SolarMass(7)):
-    #fisco = 2*1./(6*m.sqrt(6)*2*m.pi)*(c**3/G/(mass1+mass2))
-    #print (fisco)
-    return 1./m.pi*(5./256.*1./t)**(3./8.)*(G*Mc/c**3)**(-5./8.)
+       return 1./m.pi*(5./256.*1./t)**(3./8.)*(G*Mc/c**3)**(-5./8.)
 
 ## Detector pattern functions (Schutz11)
 # F+
-def Fplus(theta, phi, psi):
+def Fplus(theta, phi, psi, detector='H1'):
+    
+    if detector=='H1':
+        latitude, longitude, rotation = H1position()
+    elif detector=='L1':
+        latitude, longitude, rotation = L1position()
+    elif detector=='V1':
+        latitude, longitude, rotation = V1position()
+    
+    latitude, longitude, rotation = H1position()
+    theta = theta - (np.pi/2-latitude)
+    # phi - long shift x axis toward south
+    phi = phi - longitude - rotation
+    psi = psi - longitude - rotation
+
     return 0.5*(1+m.cos(theta)**2)*m.cos(2*phi)* \
             m.cos(2*psi)-m.cos(theta)*m.sin(2*phi)*m.sin(2*psi)
 
 # Fx
-def Fcross(theta, phi, psi):
+def Fcross(theta, phi, psi, detector='H1'):
+ 
+    if detector=='H1':
+        latitude, longitude, rotation = H1position()
+    elif detector=='L1':
+        latitude, longitude, rotation = L1position()
+    elif detector=='V1':
+        latitude, longitude, rotation = V1position()
+
+    theta = theta - (np.pi/2-latitude)
+    # phi - long shift x axis towards South
+    phi = phi - longitude - rotation
+    psi = psi - longitude - rotation
+
     return 0.5*(1+m.cos(theta)**2)*m.cos(2*phi)* \
             m.sin(2*psi)+m.cos(theta)*m.sin(2*phi)*m.cos(2*psi)
 
@@ -59,7 +92,7 @@ def PHI(Mc, t):
 
 def Hplus(mass1, mass2, dl, z, iota):
     Mc = ChirpMass(mass1, mass2, z)
-    tau = Tau(Mc)
+    tau = Tau(Mc, mass1, mass2, z)
     Phi = PHI(Mc, tau)
     freq = Freq(Mc, tau)
     dl = Mpc(dl)
@@ -71,7 +104,7 @@ def Hplus(mass1, mass2, dl, z, iota):
 
 def Hcross(mass1, mass2, dl, z, iota):
     Mc = ChirpMass(mass1, mass2, z)
-    tau = Tau(Mc)
+    tau = Tau(Mc, mass1, mass2, z)
     Phi = PHI(Mc, tau)
     freq = Freq(Mc, tau)
     dl = Mpc(dl)
@@ -84,8 +117,8 @@ def Hcross(mass1, mass2, dl, z, iota):
 def H(mass1, mass2, dl, z, iota, theta, phi, psi):
     hplus = Hplus(mass1, mass2, dl, z, iota)
     hcross = Hcross(mass1, mass2, dl, z, iota)
-    fplus = Fplus(theta, phi, psi)
-    fcross = Fcross(theta, phi, psi)
+    fplus = Fplus(theta, phi, psi, detector)
+    fcross = Fcross(theta, phi, psi, detector)
     
     return fplus*hplus+fcross*hcross
 
@@ -102,7 +135,7 @@ def PSIcross(Mc, freq):
 
 def Hplusft(mass1, mass2, dl, z, iota):
     Mc = ChirpMass(mass1, mass2, z)
-    tau = Tau(Mc)
+    tau = Tau(Mc, mass1, mass2, z)
     freq = Freq(Mc, tau)
     dl = Mpc(dl)
     #
@@ -110,14 +143,14 @@ def Hplusft(mass1, mass2, dl, z, iota):
     #
     Psiplus = PSIplus(Mc, freq)
     A = 1./m.pi**(2./3.)*(5./24.)**(1./2.)
-    hplusft = A*np.exp(1j*Psiplus)*c/dl*(G*Mc/c**3)*\
+    hplusft = A*np.exp(1j*Psiplus)*c/dl*(G*Mc/c**3)**(5./6.)*\
             freq**(-7./6.)*(1+np.cos(iota)**2)/2.
     
     return hplusft
 
 def Hcrossft(mass1, mass2, dl, z, iota):
     Mc = ChirpMass(mass1, mass2, z)
-    tau = Tau(Mc)
+    tau = Tau(Mc, mass1, mass2, z)
     freq = Freq(Mc, tau)
     dl = Mpc(dl)
     #
@@ -125,7 +158,7 @@ def Hcrossft(mass1, mass2, dl, z, iota):
     #
     Psicross = PSIcross(Mc, freq)
     A = 1./m.pi**(2./3)*(5./24.)**(1./2.)
-    hcrossft = A*np.exp(1j*Psicross)*c/dl*(G*Mc/c**3)*\
+    hcrossft = A*np.exp(1j*Psicross)*c/dl*(G*Mc/c**3)**(5./6.)*\
             freq**(-7./6.)*np.cos(iota)
 
     return hcrossft
@@ -133,21 +166,21 @@ def Hcrossft(mass1, mass2, dl, z, iota):
 def Hft(mass1, mass2, dl, z, iota, theta, phi, psi):
     hplusft = Hplusft(mass1, mass2, dl, z, iota)
     hcrossft = Hcrossft(mass1, mass2, dl, z, iota)
-    fplus = Fplus(theta, phi, psi)
-    fcross = Fcross(theta, phi, psi)
+    fplus = Fplus(theta, phi, psi, detector)
+    fcross = Fcross(theta, phi, psi, detector)
 
     return fplus*hplusft+fcross*hcrossft
 
 # Amplitude spectral density (hard-coded model from Ligo tutorial)
 def ASD(mass1, mass2, z):
     Mc = ChirpMass(mass1, mass2, z)
-    tau = Tau(Mc)
+    tau = Tau(Mc, mass1, mass2, z)
     # same interval of the Fourier transform of h 
     freq = Freq(Mc, tau)
     #
     freq = np.logspace(np.log10(freqin), np.log10(freq[-1]),N)
     #
-    # power spectral density
+    # power spectral density (for Livingston)
     psd = (1.e-22*(18./(0.1+freq))**2)**2+0.7e-23**2+ \
             ((freq/2000.)*4.e-23)**2
     # ampliude spectral density
@@ -155,7 +188,7 @@ def ASD(mass1, mass2, z):
     
     return freq, asd
 
-def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
+def SNR(mass1, mass2, dl, z, iota, theta, phi, psi, table=0):
     freq, asd = ASD(mass1, mass2, z)
     hft = Hft(mass1, mass2, dl, z, iota, theta, phi, psi)
 
@@ -178,8 +211,9 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
     #integral = np.trapz(fraction, freq)
     
     snr = np.sqrt(integral)
-
-    print (tabulate([['Mass1 (Solar masses)',mass1],\
+    if table == 1:
+        from tabulate import tabulate
+        print (tabulate([['Mass1 (Solar masses)',mass1],\
                      ['Mass2 (Solar masses)',mass2],\
                      ['d_l (Mpc)',dl],['z',z],\
                      ['iota (between n and L)',iota],\
@@ -187,8 +221,11 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
                      ['phi (from x-arm)',phi],\
                      ['psi (binary axes orientation)',psi],\
                      ['frequency in band', freqin],\
+                     ['Detector', detector],\
                      ['SNR (inspiral)',snr]], \
                     headers=['Quantities','Values']))
+    else:
+        print('SNR = ', snr)
 
     return snr
 
@@ -196,13 +233,13 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi):
 def HPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
     h = H(mass1, mass2, dl, z, iota, theta, phi, psi)
     Mc = ChirpMass(mass1, mass2, z)
-    time = Tau(Mc)
+    time = Tau(Mc, mass1, mass2, z)
     
     return time, h
 
 def FPlot(mass1, mass2, z):
     Mc = ChirpMass(mass1, mass2, z)
-    time = Tau(Mc)
+    time = Tau(Mc, mass1, mass2, z)
     freq = Freq(Mc, time)
 
     return time, freq
@@ -210,7 +247,7 @@ def FPlot(mass1, mass2, z):
 def HftPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
     hft = Hft(mass1, mass2, dl, z, iota, theta, phi, psi)
     Mc = ChirpMass(mass1, mass2, z)
-    time = Tau(Mc)
+    time = Tau(Mc, mass1, mass2, z)
     freq = Freq(Mc, time)
     #
     freq = np.logspace(np.log10(freqin), np.log10(freq[-1]),N)
@@ -229,4 +266,28 @@ def ASDPlot():
     asd = np.sqrt(psd)
     return freq, asd
 
+# Detector positions
 
+def H1position():
+    latitude = (49+27./60.+19./3600.)*m.pi/180
+    longitude = 2*m.pi - (119+44./60.+28./3600)*m.pi/180.
+    # x-arm respect to South position
+    rotation = (180+36)*m.pi/180.
+
+    return latitude, longitude, rotation
+
+def L1position():
+    latitude = (30+33./60.+46./3600.)*m.pi/180
+    longitude = 2*m.pi - (90+46./60.+27./3600)*m.pi/180
+    # x-arm orientation respect to South position
+    rotation = (270+18)*m.pi/180.
+
+    return latitude, longitude, rotation
+
+def V1position():
+    latitude = (43+37./60.+53./3600.)*m.pi/180.
+    longitude = (10+30./60.+16./3600)*m.pi/180.
+    # x-arm orientation respect to South position
+    rotation = (180-19)*m.pi/180.
+
+    return latitude, longitude, rotation
