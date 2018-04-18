@@ -23,8 +23,8 @@ time, freq = snr.FPlot(mass1, mass2, z)
 freq1, hft  = snr.HftPlot(mass1,mass2,dl,z,iota,theta,phi,psi)
 freq2, asd = snr.ASDPlot()
 
-# Print a table with data and SNR
-snr.SNR(mass1,mass2,dl,z,iota,theta,phi,psi)
+# Print a table with data and SNR (add 1 as last argument for table result
+snr.SNR(mass1,mass2,dl,z,iota,theta,phi,psi,1)
  
 ## Plots
 fig = plt.figure(figsize=(12,5))
