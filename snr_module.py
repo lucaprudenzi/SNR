@@ -7,6 +7,7 @@ M_sun = 1.989e33 # Sun mass [g]
 freqin = 1 # Ligo inband frequency
 G = 6.67e-8
 N = 150000 # points in time array
+
 # choose between H1, L1 and V1
 
 # detector = 'L1'
@@ -21,8 +22,7 @@ def ChirpMass(mass1, mass2, z):
     mass2 = SolarMass(mass2)
     return (mass1*mass2)**(3./5.)/(mass1+mass2)**(1./5.)*(1+z)
 
-## Distances functions
-# distance in Mpc
+# Distance in Mpc
 def Mpc(distance):
     return distance*3.1e24
 
@@ -50,7 +50,7 @@ def Tau(Mc, mass1, mass2, z):
 def Freq(Mc, t, mass1 = SolarMass(15), mass2 = SolarMass(7)):
        return 1./m.pi*(5./256.*1./t)**(3./8.)*(G*Mc/c**3)**(-5./8.)
 
-## Detector pattern functions (Schutz11)
+## Detector pattern functions (Schutz+11)
 # F+
 def Fplus(theta, phi, psi, detector='H1'):
     
@@ -61,7 +61,7 @@ def Fplus(theta, phi, psi, detector='H1'):
     elif detector=='V1':
         latitude, longitude, rotation = V1position()
     
-    # theta has 0 on the z-axis, latitude on the x-y plane
+    # theta is 0 on the z-axis, latitude on the x-y plane
     theta = theta - (np.pi/2-latitude)
     # phi - longitudine = x-axis points toward south
     # rotation = x-axis rotation from South
@@ -83,7 +83,7 @@ def Fcross(theta, phi, psi, detector='H1'):
     elif detector=='V1':
         latitude, longitude, rotation = V1position()
 
-    # theta has 0 on the z-axis, latitude on the x-y plane
+    # theta is 0 on the z-axis, latitude on the x-y plane
     theta = theta - (np.pi/2-latitude)
     # phi - longitudine = x-axis points toward south
     # rotation = x-axis rotation from South
@@ -197,7 +197,7 @@ def ASD(mass1, mass2, z):
     freq = np.logspace(np.log10(freqin), np.log10(freq[-1]),N)
     #
     psd = PSDInput(freq)
-    # ampliude spectral density
+    # amplitude spectral density
     asd = np.sqrt(psd)
     
     return freq, asd
@@ -282,11 +282,33 @@ def ASDPlot():
     return freq, asd
 
 # Detector positions
-
+# How  the rotation angle is defined: consider a system of coordinates xyz
+# located at the center of the Earth, with x axis towards the Greenwich
+# meridian and z axis towards the rotation axis of the Earth.
+# To transform theta, phi and psi angles from this system to the system
+# of the interferometers on the Earth (where x-y plane is the plane of the
+# interferomenters, and x and y axes are lined up with x and y arms)
+# follow these steps:
+# 1. Move the system of coordinates from the center of the Earth to North
+# Pole to catch the situation better
+# 2. Rotate the xy plane around z axis of the longitude of the interferometer
+# location, so the x axis points towards the meridian that goes through that
+# location
+# 3. rotate z axis in this new x-z plane of 90-latitude, so that the plane xy is
+# now tangent to the location of the interferometer and z axis is perpendicular to
+# it
+# 4. Now x-axis points towards South, along the meridian. Rotation angle is the
+# rotation from South to the real orientation of the x arm of the interferometer
+# 
+# So in this new sytem
+# * theta angle is rotated of 90-latitude
+# * phi angle is rotated of longitude+(rotation of x arm from south)
+# * psi angle follows the same transformation as phi because on the sky plane
+# the projections of the axes don't change their orientation
 def H1position():
     latitude = (49+27./60.+19./3600.)*m.pi/180
     longitude = 2*m.pi - (119+44./60.+28./3600)*m.pi/180.
-    # x-arm respect to South position
+    # x-arm orientation with respect to South position
     rotation = (180+36)*m.pi/180.
 
     return latitude, longitude, rotation
@@ -294,7 +316,7 @@ def H1position():
 def L1position():
     latitude = (30+33./60.+46./3600.)*m.pi/180
     longitude = 2*m.pi - (90+46./60.+27./3600)*m.pi/180
-    # x-arm orientation respect to South position
+    # x-arm orientation with respect to South position
     rotation = (270+18)*m.pi/180.
 
     return latitude, longitude, rotation
@@ -302,7 +324,7 @@ def L1position():
 def V1position():
     latitude = (43+37./60.+53./3600.)*m.pi/180.
     longitude = (10+30./60.+16./3600)*m.pi/180.
-    # x-arm orientation respect to South position
+    # x-arm orientation with respect to South position
     rotation = (180-19)*m.pi/180.
 
     return latitude, longitude, rotation
