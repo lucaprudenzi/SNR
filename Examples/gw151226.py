@@ -11,8 +11,8 @@ mass1 = 7.5 # Solar masses
 mass2 = 14.2 # Solar masses
 dl = 440 # Mpc
 z = 0.09
-iota = 0 # angle between line of sight and angular momentum of the binary
-theta = 0 # angle from the z axis, perpendicular the interferometer
+iota = 0 # angle between line of sight  and angular momentum of the binary
+theta = 0 # angle from the z axis, perpendicular to the interferometer
 phi = 0 # angle from x-arm of the interferometer
 psi = 0 # orientation of the axes of the binary respect to the axes of the
         # interferometers
@@ -23,9 +23,12 @@ time, freq = snr.FPlot(mass1, mass2, z)
 freq1, hft  = snr.HftPlot(mass1,mass2,dl,z,iota,theta,phi,psi)
 freq2, asd = snr.ASDPlot()
 
-# Print a table with data and SNR (add 1 as last argument for table result
-snr.SNR(mass1,mass2,dl,z,iota,theta,phi,psi,1)
- 
+# Print a table with data and SNR
+# print table with results (needs tabulate package) 
+# snr_result = snr.SNR(mass1,mass2,dl,z,iota,theta,phi,psi,1)
+# print only snr (no additional package needed)
+snr_result = snr.SNR(mass1,mass2,dl,z,iota,theta,phi,psi)
+
 ## Plots
 fig = plt.figure(figsize=(12,5))
 gs = gridspec.GridSpec(2, 4)
