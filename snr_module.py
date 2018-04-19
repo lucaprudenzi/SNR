@@ -8,7 +8,10 @@ freqin = 1 # Ligo inband frequency
 G = 6.67e-8
 N = 150000 # points in time array
 # choose between H1, L1 and V1
-detector = 'L1'
+
+# detector = 'L1'
+detector = 'H1'
+# detector = 'V1'
 
 def SolarMass(mass):
     return  mass*M_sun
@@ -58,10 +61,13 @@ def Fplus(theta, phi, psi, detector='H1'):
     elif detector=='V1':
         latitude, longitude, rotation = V1position()
     
-    latitude, longitude, rotation = H1position()
+    # theta has 0 on the z-axis, latitude on the x-y plane
     theta = theta - (np.pi/2-latitude)
-    # phi - long shift x axis toward south
+    # phi - longitudine = x-axis points toward south
+    # rotation = x-axis rotation from South
     phi = phi - longitude - rotation
+    # psi trasforms in the same way as phi, because projection on
+    # the sky plane doesn't change angles
     psi = psi - longitude - rotation
 
     return 0.5*(1+m.cos(theta)**2)*m.cos(2*phi)* \
@@ -77,9 +83,13 @@ def Fcross(theta, phi, psi, detector='H1'):
     elif detector=='V1':
         latitude, longitude, rotation = V1position()
 
+    # theta has 0 on the z-axis, latitude on the x-y plane
     theta = theta - (np.pi/2-latitude)
-    # phi - long shift x axis towards South
+    # phi - longitudine = x-axis points toward south
+    # rotation = x-axis rotation from South
     phi = phi - longitude - rotation
+    # psi trasforms in the same way as phi, because projection on
+    # the sky plane doesn't change angles 
     psi = psi - longitude - rotation
 
     return 0.5*(1+m.cos(theta)**2)*m.cos(2*phi)* \
@@ -171,6 +181,12 @@ def Hft(mass1, mass2, dl, z, iota, theta, phi, psi):
 
     return fplus*hplusft+fcross*hcrossft
 
+def PSDInput(freq):
+    # power spectral density (from Ligo tutorial)
+    psd = (1.e-22*(18./(0.1+freq))**2)**2+0.7e-23**2+ \
+            ((freq/2000.)*4.e-23)**2
+    return psd
+
 # Amplitude spectral density (hard-coded model from Ligo tutorial)
 def ASD(mass1, mass2, z):
     Mc = ChirpMass(mass1, mass2, z)
@@ -180,9 +196,7 @@ def ASD(mass1, mass2, z):
     #
     freq = np.logspace(np.log10(freqin), np.log10(freq[-1]),N)
     #
-    # power spectral density (for Livingston)
-    psd = (1.e-22*(18./(0.1+freq))**2)**2+0.7e-23**2+ \
-            ((freq/2000.)*4.e-23)**2
+    psd = PSDInput(freq)
     # ampliude spectral density
     asd = np.sqrt(psd)
     
@@ -216,13 +230,14 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi, table=0):
         print (tabulate([['Mass1 (Solar masses)',mass1],\
                      ['Mass2 (Solar masses)',mass2],\
                      ['d_l (Mpc)',dl],['z',z],\
-                     ['iota (between n and L)',iota],\
-                     ['theta (from z-axis)', theta],\
-                     ['phi (from x-arm)',phi],\
-                     ['psi (binary axes orientation)',psi],\
+                     ['iota (between n and L)',round(iota*180./np.pi,2)],\
+                     ['theta (from z-axis)', round(theta*180./np.pi,2)],\
+                     ['phi (from x-arm)',round(phi*180./np.pi,2)],\
+                     ['psi (binary axes orientation)',\
+                      round(psi*180/np.pi,2)],\
                      ['frequency in band', freqin],\
                      ['Detector', detector],\
-                     ['SNR (inspiral)',snr]], \
+                     ['SNR (inspiral)',round(snr,2)]], \
                     headers=['Quantities','Values']))
     else:
         print('SNR = ', snr)
@@ -256,7 +271,7 @@ def HftPlot(mass1, mass2, dl, z, iota, theta, phi, psi):
     return freq, hft
 
 def ASDPlot():
-    freqfinal = 1000
+    freqfinal = 2000
     # frequency interval
     freq = np.linspace(freqin,freqfinal,N)
     # power spectral density
