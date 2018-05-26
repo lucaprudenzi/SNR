@@ -30,6 +30,7 @@ geoparamfile.close()
 detanglesfile = open("detangles.txt")
 detangles = [list(map(float, line.strip().split(' '))) for line in detanglesfile]
 
+# Angles seen by detector 
 theta = detangles[0][0] # angle from the z axis of interferometer to source position
 phi = detangles[1][0] # angle from x-arm of the interferometer to source position
 psi = detangles[2][0] # angle from the projected x-arm of the interferometer on binary plane
