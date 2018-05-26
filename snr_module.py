@@ -1,5 +1,6 @@
 import math as m
 import numpy as np
+import string
 
 # Constants
 c = 3e10
@@ -7,12 +8,6 @@ M_sun = 1.989e33 # Sun mass [g]
 freqin = 1 # Ligo inband frequency
 G = 6.67e-8
 N = 150000 # points in time array
-
-# choose between H1, L1 and V1
-
-# detector = 'L1'
-detector = 'H1'
-# detector = 'V1'
 
 def SolarMass(mass):
     return  mass*M_sun
@@ -47,51 +42,17 @@ def Tau(Mc, mass1, mass2, z):
     tau = tcoal-t
     return tau
 
-def Freq(Mc, t, mass1 = SolarMass(15), mass2 = SolarMass(7)):
+def Freq(Mc, t):
        return 1./m.pi*(5./256.*1./t)**(3./8.)*(G*Mc/c**3)**(-5./8.)
 
 ## Detector pattern functions (Schutz+11)
 # F+
-def Fplus(theta, phi, psi, detector='H1'):
-    
-    if detector=='H1':
-        latitude, longitude, rotation = H1position()
-    elif detector=='L1':
-        latitude, longitude, rotation = L1position()
-    elif detector=='V1':
-        latitude, longitude, rotation = V1position()
-    
-    # theta is 0 on the z-axis, latitude on the x-y plane
-    theta = theta - (np.pi/2-latitude)
-    # phi - longitudine = x-axis points toward south
-    # rotation = x-axis rotation from South
-    phi = phi - longitude - rotation
-    # psi trasforms in the same way as phi, because projection on
-    # the sky plane doesn't change angles
-    psi = psi - longitude - rotation
-
+def Fplus(theta, phi, psi):
     return 0.5*(1+m.cos(theta)**2)*m.cos(2*phi)* \
             m.cos(2*psi)-m.cos(theta)*m.sin(2*phi)*m.sin(2*psi)
 
 # Fx
-def Fcross(theta, phi, psi, detector='H1'):
- 
-    if detector=='H1':
-        latitude, longitude, rotation = H1position()
-    elif detector=='L1':
-        latitude, longitude, rotation = L1position()
-    elif detector=='V1':
-        latitude, longitude, rotation = V1position()
-
-    # theta is 0 on the z-axis, latitude on the x-y plane
-    theta = theta - (np.pi/2-latitude)
-    # phi - longitudine = x-axis points toward south
-    # rotation = x-axis rotation from South
-    phi = phi - longitude - rotation
-    # psi trasforms in the same way as phi, because projection on
-    # the sky plane doesn't change angles 
-    psi = psi - longitude - rotation
-
+def Fcross(theta, phi, psi):
     return 0.5*(1+m.cos(theta)**2)*m.cos(2*phi)* \
             m.sin(2*psi)+m.cos(theta)*m.sin(2*phi)*m.cos(2*psi)
 
@@ -109,7 +70,6 @@ def Hplus(mass1, mass2, dl, z, iota):
 
     hplus = 4./dl*(G*Mc/c**2)**(5./3.)*(m.pi*freq/c)**(2./3.)* \
             (1+np.cos(iota)**2)/2.*np.cos(Phi)
-    
     return hplus
 
 def Hcross(mass1, mass2, dl, z, iota):
@@ -127,8 +87,8 @@ def Hcross(mass1, mass2, dl, z, iota):
 def H(mass1, mass2, dl, z, iota, theta, phi, psi):
     hplus = Hplus(mass1, mass2, dl, z, iota)
     hcross = Hcross(mass1, mass2, dl, z, iota)
-    fplus = Fplus(theta, phi, psi, detector)
-    fcross = Fcross(theta, phi, psi, detector)
+    fplus = Fplus(theta, phi, psi)
+    fcross = Fcross(theta, phi, psi)
     
     return fplus*hplus+fcross*hcross
 
@@ -176,8 +136,8 @@ def Hcrossft(mass1, mass2, dl, z, iota):
 def Hft(mass1, mass2, dl, z, iota, theta, phi, psi):
     hplusft = Hplusft(mass1, mass2, dl, z, iota)
     hcrossft = Hcrossft(mass1, mass2, dl, z, iota)
-    fplus = Fplus(theta, phi, psi, detector)
-    fcross = Fcross(theta, phi, psi, detector)
+    fplus = Fplus(theta, phi, psi)
+    fcross = Fcross(theta, phi, psi)
 
     return fplus*hplusft+fcross*hcrossft
 
@@ -202,7 +162,7 @@ def ASD(mass1, mass2, z):
     
     return freq, asd
 
-def SNR(mass1, mass2, dl, z, iota, theta, phi, psi, table=0):
+def SNR(mass1, mass2, dl, z, iota, theta, phi, psi, detectorname, table=0):
     freq, asd = ASD(mass1, mass2, z)
     hft = Hft(mass1, mass2, dl, z, iota, theta, phi, psi)
 
@@ -230,13 +190,13 @@ def SNR(mass1, mass2, dl, z, iota, theta, phi, psi, table=0):
         print (tabulate([['Mass1 (Solar masses)',mass1],\
                      ['Mass2 (Solar masses)',mass2],\
                      ['d_l (Mpc)',dl],['z',z],\
-                     ['iota (between n and L)',round(iota*180./np.pi,2)],\
-                     ['theta (from z-axis)', round(theta*180./np.pi,2)],\
-                     ['phi (from x-arm)',round(phi*180./np.pi,2)],\
+                     ['iota (between n and L)',round(iota*180/m.pi,2)],\
+                     ['theta (from z-axis)', round(theta*180/m.pi,2)],\
+                     ['phi (from x-arm)',round(phi*180/m.pi,2)],\
                      ['psi (binary axes orientation)',\
-                      round(psi*180/np.pi,2)],\
+                      round(psi*180/m.pi,2)],\
                      ['frequency in band', freqin],\
-                     ['Detector', detector],\
+                     ['detector', detectorname],\
                      ['SNR (inspiral)',round(snr,2)]], \
                     headers=['Quantities','Values']))
     else:
@@ -299,32 +259,3 @@ def ASDPlot():
 # it
 # 4. Now x-axis points towards South, along the meridian. Rotation angle is the
 # rotation from South to the real orientation of the x arm of the interferometer
-# 
-# So in this new sytem
-# * theta angle is rotated of 90-latitude
-# * phi angle is rotated of longitude+(rotation of x arm from south)
-# * psi angle follows the same transformation as phi because on the sky plane
-# the projections of the axes don't change their orientation
-def H1position():
-    latitude = (49+27./60.+19./3600.)*m.pi/180
-    longitude = 2*m.pi - (119+44./60.+28./3600)*m.pi/180.
-    # x-arm orientation with respect to South position
-    rotation = (180+36)*m.pi/180.
-
-    return latitude, longitude, rotation
-
-def L1position():
-    latitude = (30+33./60.+46./3600.)*m.pi/180
-    longitude = 2*m.pi - (90+46./60.+27./3600)*m.pi/180
-    # x-arm orientation with respect to South position
-    rotation = (270+18)*m.pi/180.
-
-    return latitude, longitude, rotation
-
-def V1position():
-    latitude = (43+37./60.+53./3600.)*m.pi/180.
-    longitude = (10+30./60.+16./3600)*m.pi/180.
-    # x-arm orientation with respect to South position
-    rotation = (180-19)*m.pi/180.
-
-    return latitude, longitude, rotation

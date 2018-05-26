@@ -1,32 +1,56 @@
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import snr_module as snr
 import numpy as np
+import string
 
 # Parameters
-mass1 = 29 # Solar masses
-mass2 = 36 # Solar masses
-dl = 420 # Mpc
-z = 0.09
-iota = 0 # angle between line of sight 
-         # and angular momentum of the binary
-theta = 0 # angle from the z axis, perpendicular to the interferometer
-phi = 0 # angle from x-arm of the interferometer
-psi = 0 # orientation of the axes of the binary respect to the axes of the
-        # interferometers
+geoparamfile = open("geoparams.txt", "r")
+geoparams = [list(map(float, line.strip().split(' '))) for line in geoparamfile]
+mass1= geoparams[0][0] # in Solar Masses
+mass2 = geoparams[1][0] # in Solar Masses
+dl = geoparams[2][0]
+z = geoparams[3][0]
+iota = geoparams[7][0] # angle between line of sight and angular momentum of the binary
+iota = iota*np.pi/180
+detector = geoparams[8][0]
+
+detectorname = ''
+
+if (detector == 1):
+    detectorname = 'Hanford'
+if (detector == 2):
+    detectorname = 'Livingstone'
+if (detector == 3):
+    detectorname = 'Virgo'
+
+geoparamfile.close()
+
+# change last value of geoparams.txt in 1, 2 or 3 to choose H1, L1, V1
+detanglesfile = open("detangles.txt")
+detangles = [list(map(float, line.strip().split(' '))) for line in detanglesfile]
+
+theta = detangles[0][0] # angle from the z axis of interferometer to source position
+phi = detangles[1][0] # angle from x-arm of the interferometer to source position
+psi = detangles[2][0] # angle from the projected x-arm of the interferometer on binary plane
+                      # and semijar axis of binary
+
+theta = theta*np.pi/180.
+phi = phi*np.pi/180.
+psi = psi*np.pi/180.
+
+detanglesfile.close()
 
 time, h = snr.HPlot(mass1,mass2,dl,z,iota,theta,phi,psi)
 time, freq = snr.FPlot(mass1, mass2, z)
 
-freq1, hft  = snr.HftPlot(mass1,mass2,dl,z,iota,theta,phi,psi)
+freq1, hft  = snr.HftPlot(mass1,mass2,dl,z,iota, theta, phi, psi)
 freq2, asd = snr.ASDPlot()
 
 # Print a table with data and SNR
 # print table with results (needs tabulate package) 
-snr_result = snr.SNR(mass1,mass2,dl,z,iota,theta,phi,psi,1)
+snr_result = snr.SNR(mass1,mass2,dl,z,iota, theta, phi, psi, detectorname, 1)
+
 # print only snr (no additional package needed)
 # snr_result = snr.SNR(mass1,mass2,dl,z,iota,theta,phi,psi)
 
@@ -34,8 +58,9 @@ snr_result = snr.SNR(mass1,mass2,dl,z,iota,theta,phi,psi,1)
 fig = plt.figure(figsize=(12,5))
 gs = gridspec.GridSpec(2, 4)
 gs.update(wspace=.7)
-fig.suptitle('mass1: %.1f, mass2: %.1f, dl: %.1fMpc, z: %.1f, iota: %.1f, theta: %.1f, phi: %.1f, psi: %.1f' \
-             %(mass1,mass2,dl,z,iota,theta,phi,psi), fontsize=11)
+fig.suptitle('mass1: %.1f, mass2: %.1f, dl: %.1fMpc, z: %.1f, iota: %.1f, \
+             theta: %.1f, phi: %.1f, psi: %.1f'
+             %(mass1,mass2,dl,z,iota*180/np.pi,theta*180/np.pi,phi*180/np.pi,psi*180/np.pi), fontsize=11)
 # remove vertical gap between subplot
 plt.subplots_adjust(hspace=.0)
 # First left hand plot
