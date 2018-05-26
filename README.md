@@ -19,9 +19,9 @@ The second part of the project, written in python in snr_module.py, computes the
 ## How to run the project
 
 If you want only see how the different plane are oriented, you can execute directly the Asymptote program
-'''
+```
 asy -V sphere.asy
-'''
+```
 
 In the parameters section of sphere.asy, you can modify every paramters of the system.
 
@@ -39,8 +39,8 @@ If you want to know also the SNR for that sources, the only thing to modify is a
 
 Once written your parameters, you have to execute a bash script that execute the asyntotes module and than the python module
 To execute the script:
-'''
+```
 bash snr.sh
-'''
+```
 At first Asymptote script is executed, then after having closed that window, python script is executed with the result SNR printed.
 
