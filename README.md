@@ -22,8 +22,10 @@ If you want only see how the different plane are oriented, you can execute direc
 ```
 asy -V sphere.asy
 ```
+The three system of axes follow the convention of X-axis:blue, Y-axis:green, Z-axis:red.
+At the center of the sphere there are two systems: the detector system and the geocentric system (they are approximatly at the same point if we consider the distance of the gravitational source). On the sphere surface there is the binary, with X-axis towards semimajor axis of the binary.
 
-In the parameters section of sphere.asy, you can modify every paramters of the system.
+In the parameters section of sphere.asy, you can modify every parameters of the system.
 
 ![Asymptote](/images/asy.png "Asymptote")
 

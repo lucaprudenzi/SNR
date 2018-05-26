@@ -85,6 +85,28 @@ triple Zdot = rotate(theta*180/pi,(-sin(phi),cos(phi),0))*Z;
 // Y axis direction after first rotation (axis for second rotation)
 triple Ydot = rotate(phi*180/pi,Z)*Y;
 
+/*
+Detector positions
+How  the rotation angle is defined: consider a system of coordinates xyz
+located at the center of the Earth, with x axis towards the Greenwich
+meridian and z axis towards the rotation axis of the Earth.
+To transform theta, phi and psi angles from this system to the system
+of the interferometers on the Earth (where x-y plane is the plane of the
+interferomenters, and x and y axes are lined up with x and y arms)
+follow these steps:
+1. Move the system of coordinates from the center of the Earth to North
+Pole to catch the situation better
+2. Rotate the xy plane around z axis of the longitude of the interferometer
+location, so the x axis points towards the meridian that goes through that
+location
+3. rotate z axis in this new x-z plane of 90-latitude, so that the plane xy is
+tangent to the location of the interferometer and z axis is perpendicular to
+it
+4. Now x-axis points towards South, along the meridian. Rotation angle is the
+rotation from South to the real orientation of the x arm of the interferometer
+*/                                                                                         
+
+
 // Detector plane
 path3 detplane=(0.5,0,0)--(0,0.5,0)--(-0.5,0,0)--(0,-0.5,0)--cycle;
 detplane = rotate(phi*180/pi,Z)*detplane;
