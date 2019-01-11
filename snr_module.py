@@ -5,7 +5,7 @@ import string
 # Constants
 c = 3e10
 M_sun = 1.989e33 # Sun mass [g]
-freqin = 1 # Ligo inband frequency
+freqin = 15 # Ligo inband frequency
 G = 6.67e-8
 N = 150000 # points in time array
 
