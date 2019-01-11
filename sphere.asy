@@ -85,7 +85,7 @@ path3 anglearc(real radius, triple A, triple B, triple C) {
 }
 
 // Source Angles on geocentric system
-path3 arcphiS = anglearc(0.5, X, O, projectedSource);
+path3 arcphiS = anglearc(0.1, X, O, projectedSource);
 path3 arcthetaS = anglearc(0.5, Z, O, Source);
 
 draw(arcphiS, L=Label("$\small\phi_s$", align=N));

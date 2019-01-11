@@ -14,11 +14,12 @@ import three;
 file geoparamsfile = input("geoparams.txt");
 real [] geoparams = geoparamsfile;
 
+// Source position
 real thetaS = geoparams[4]*pi/180;
 real phiS = geoparams[5]*pi/180;
 real psi = geoparams[6]*pi/180;
 real iota = geoparams[7]*pi/180;
-// 1 for H1 detector, 2 for L1 detector, 3 for V1 detector
+// detector code: 1 for H1 detector, 2 for L1 detector, 3 for V1 detector
 real detector = geoparams[8];
 real theta;
 real phi;
@@ -134,6 +135,7 @@ draw(Zax, arrow=Arrow3(), red);
 // Sphere
 draw(scale3(1.1)*unitsphere, opacity(0.1));
 
+
 // Source position
 real radius = 1;
 triple Source=radius*(sin(thetaS)*cos(phiS),sin(thetaS)*sin(phiS),cos(thetaS));
@@ -141,6 +143,11 @@ triple projectedSource=radius*(sin(thetaS)*cos(phiS),sin(thetaS)*sin(phiS),0);
 dot(Source);
 label("S",Source,N);
 dot(projectedSource);
+
+//Earth position
+triple Earthposition=(0,0,0);
+dot(Earthposition);
+label("E",Earthposition,N);
 
 // source projection on geocentric system
 path3 projectedSourceXY = O--projectedSource;
