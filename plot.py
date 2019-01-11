@@ -12,7 +12,7 @@ mass2 = geoparams[1][0] # in Solar Masses
 dl = geoparams[2][0]
 z = geoparams[3][0]
 iota = geoparams[7][0] # angle between line of sight and angular momentum of the binary
-iota = iota*np.pi/180
+iota = iota*np.pi/180.
 detector = geoparams[8][0]
 
 detectorname = ''
@@ -59,9 +59,7 @@ snr_result = snr.SNR(mass1,mass2,dl,z,iota, theta, phi, psi, detectorname, 1)
 fig = plt.figure(figsize=(12,5))
 gs = gridspec.GridSpec(2, 4)
 gs.update(wspace=.7)
-fig.suptitle('mass1: %.1f, mass2: %.1f, dl: %.1fMpc, z: %.1f, iota: %.1f, \
-             theta: %.1f, phi: %.1f, psi: %.1f'
-             %(mass1,mass2,dl,z,iota*180/np.pi,theta*180/np.pi,phi*180/np.pi,psi*180/np.pi), fontsize=11)
+fig.suptitle('mass1: %.1f, mass2: %.1f, dl: %.1fMpc, z: %.1f, iota: %.1f, theta: %.1f, phi: %.1f, psi: %.1f'%(mass1,mass2,dl,z,iota*180/np.pi,theta*180/np.pi,phi*180/np.pi,psi*180/np.pi), fontsize=11)
 # remove vertical gap between subplot
 plt.subplots_adjust(hspace=.0)
 # First left hand plot
