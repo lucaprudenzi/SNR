@@ -4,7 +4,10 @@ This project has the aim of compute the amplitude, the frequency and the signal-
 Given the position of the source in a geocentric system, with X-axis (the x-arm of an hypotetic interferometer) towards Greenwitch meridian and the Z-axis (the normal to the plane of this hypotetic interferometer) towards North Pole, the first step in to compute under which angles the sources is seen by an interferometer in a certain position on earth surface, so with x-y plane tangent to the Earth surface and rotated respect to the initial system. An Asymptote program shows the situation in 3D space and compute for the interferometer system the angles Theta and Phi (that identify the source point on the sky) and the angle Psi that describes how is oriented the projected X-axis of the interferometer on the binary rotational plane respect to the semi-major axis of the binary that lies on the binary rotational plane
 
 The second part of the project, written in python in snr_module.py, computes the frequency, the amplitude and the SNR measured by the interferometers that sees the sources under the angles computed in the previous part. 
- 
+
+![Asymptote](/images/asy.png "Asymptote")
+
+
 ![GW151226](/images/gw150914.png "GW150914")
 
 <p align="center">
@@ -15,8 +18,6 @@ The second part of the project, written in python in snr_module.py, computes the
 - python3
 - asymptote
 - tabulate (python module) 
-
-![Asymptote](/images/asy.png "Asymptote")
 
 ## How to run the project
 
