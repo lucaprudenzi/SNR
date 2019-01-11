@@ -5,8 +5,8 @@ Given the position of the source in a geocentric system, with X-axis (the x-arm 
 
 The second part of the project, written in python in snr_module.py, computes the frequency, the amplitude and the SNR measured by the interferometers that sees the sources under the angles computed in the previous part. 
 <p align="center">
-<img width="560" height="400" src="/images/asy.png">
-<img width="560" height="400" src="/images/gw150914.png">
+<img src="/images/asy.png">
+<img src="/images/gw150914.png">
 <img width="460" height="300" src="/images/terminal.png">
 </p>
 
