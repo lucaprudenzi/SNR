@@ -30,7 +30,7 @@ The second part of the project, written in python in snr_module.py, computes the
 	- iota (angle between the normal to the interferometer arms and the orbital angular momentum)
 	- the interferometer for which you want to compute the angles above: 1 for Hanford, 2 for Livingston, 3 for Virgo
 
-Once written the desidered parameters, you have to run a bash script that executes the Asymptote module and then the python module
+Once written the desidered parameters, you have to run a bash script that executes the Asymptote module and then the python module.
 To execute the script:
 ```
 bash snr.sh
@@ -41,5 +41,5 @@ The Asymptote script is executed, then after having closed the Asymptote window,
 ```
 asy -V spherelite.asy
 ```
-The three systems of axes follow the convention of X-axis:blue, Y-axis:green, Z-axis:red. At the center of the sphere there are two systems: the detector system and the geocentric system (they are approximatly at the same point if we consider the distance of the gravitational source). On the sphere surface there is the binary, with the X-axis towards the semimajor axis of the binary.
+The three systems of axes follow the convention of X-axis: blue, Y-axis: green, Z-axis: red. At the center of the sphere there are two systems: the detector system and the geocentric system (they are approximatly at the same point if we consider the distance of the gravitational source). On the sphere surface there is the binary, with the X-axis towards the semimajor axis of the binary.
 The asymptote program returns theta, phi and psi for the selected detector.
